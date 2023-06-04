@@ -41,6 +41,9 @@ Test
     nim c -r tests/makeTest.nim
     nimble test
 
+When compiling :code:`tests/makeTest.nim`, you can specify the instruction set
+by giving options: :code:`-d:bmi2=<bool>` and/or :code:`-d:avx2=<bool>` (default: :code:`true`).
+
 Writing Test
 ============
 

@@ -3,6 +3,10 @@ import strformat
 import strutils
 import sugar
 
+const
+  bmi2 {.booldefine.} = true
+  avx2 {.booldefine.} = true
+
 when isMainModule:
   const
     # file content
@@ -26,7 +30,7 @@ main()
   let
     matrixSeq = collect:
       for mm in MmSeq:
-         &"--mm:{mm}"
+         &"-d:bmi2={bmi2} -d:avx2={avx2} --mm:{mm}"
     fileContent = FileContentTemplate.replace(Matrix, matrixSeq.join "; ")
 
   for categoryDir in (currentSourcePath().parentDir / "*").walkDirs:
