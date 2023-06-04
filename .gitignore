@@ -1,0 +1,8 @@
+/nimcache/
+/testresults/
+/outputGotten.txt
+/tests/*
+!/tests/*/
+!/tests/makeTest.nim
+/tests/*/*
+!/tests/*/main.nim
