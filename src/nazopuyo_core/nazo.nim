@@ -3,16 +3,12 @@
 
 import deques
 import options
-import sequtils
-import sets
 import std/setutils
 import strformat
 import strutils
 import sugar
 import tables
 
-import npeg
-import npeg/lib/utf8
 import puyo_core
 
 type
@@ -122,92 +118,6 @@ func toUrl*(req: Requirement): string {.inline.} =
 # string -> Requirement
 # ------------------------------------------------
 
-func toRequirement(kind: RequirementKind, color = string.none, num = string.none): Option[Requirement] {.inline.} =
-  ## Converts the arguments to the requirement.
-  const
-    StrToColor = collect:
-      for color in RequirementColor:
-        {$color: color}
-    StrToNum = collect:
-      for num in RequirementNumber.low .. RequirementNumber.high:
-        {$num: num}
-
-  var reqColor = none RequirementColor
-  if kind in RequirementKindsWithColor:
-    if color.isNone or color.get notin StrToColor:
-      return
-
-    reqColor = StrToColor[color.get].some
-
-  var reqNum = none RequirementNumber
-  if kind in RequirementKindsWithNum:
-    if num.isNone or num.get notin StrToNum:
-      return
-
-    reqNum = StrToNum[num.get].some
-
-  return some (kind, reqColor, reqNum).Requirement
-
-## Requirement parser.
-const Parser =
-  peg("requirement", req: Option[Requirement]):
-    color <- utf8.any[0 .. 4]
-    num <- Digit[1 .. 2]
-
-    reqClear <- >color * "ぷよ全て消すべし" * !1:
-      req = CLEAR.toRequirement(color = some $1)
-    reqDisappearColor <- >num * "色消すべし" * !1:
-      req = DISAPPEAR_COLOR.toRequirement(num = some $1)
-    reqDisappearColorMore <- >num * "色以上消すべし" * !1:
-      req = DISAPPEAR_COLOR_MORE.toRequirement(num = some $1)
-    reqDisappearNum <- >color * "ぷよ" * >num * "個消すべし" * !1:
-      req = DISAPPEAR_NUM.toRequirement(color = some $1, num = some $1)
-    reqDisappearNumMore <- >color * "ぷよ" * >num * "個以上消すべし" * !1:
-      req = DISAPPEAR_NUM_MORE.toRequirement(color = some $1, num = some $1)
-    reqChain <- >num * "連鎖するべし" * !1:
-      req = CHAIN.toRequirement(num = some $1)
-    reqChainMore <- >num * "連鎖以上するべし" * !1:
-      req = CHAIN_MORE.toRequirement(num = some $1)
-    reqChainClear <- >num * "連鎖&" * >color * "ぷよ全て消すべし" * !1:
-      req = CHAIN_CLEAR.toRequirement(num = some $1, color = some $2)
-    reqChainMoreClear <- >num * "連鎖以上&" * >color * "ぷよ全て消すべし" * !1:
-      req = CHAIN_MORE_CLEAR.toRequirement(num = some $1, color = some $2)
-    reqDisappearColorSametime <- >num * "色同時に消すべし" * !1:
-      req = DISAPPEAR_COLOR_SAMETIME.toRequirement(num = some $1)
-    reqDisappearColorMoreSametime <- >num * "色以上同時に消すべし" * !1:
-      req = DISAPPEAR_COLOR_MORE_SAMETIME.toRequirement(num = some $1)
-    reqDisappearNumSametime <- >color * "ぷよ" * >num * "個同時に消すべし" * !1:
-      req = DISAPPEAR_NUM_SAMETIME.toRequirement(color = some $1, num = some $2)
-    reqDisappearNumMoreSametime <- >color * "ぷよ" * >num * "個以上同時に消すべし" * !1:
-      req = DISAPPEAR_NUM_MORE_SAMETIME.toRequirement(color = some $1, num = some $2)
-    reqDisappearPlace <- >color * "ぷよ" * >num * "箇所同時に消すべし" * !1:
-      req = DISAPPEAR_PLACE.toRequirement(color = some $1, num = some $2)
-    reqDisappearPlaceMore <- >color * "ぷよ" * >num * "箇所以上同時に消すべし" * !1:
-      req = DISAPPEAR_PLACE_MORE.toRequirement(color = some $1, num = some $2)
-    reqDisappearConnect <- >color * "ぷよ" * >num * "連結で消すべし" * !1:
-      req = DISAPPEAR_CONNECT.toRequirement(color = some $1, num = some $2)
-    reqDisappearConnectMore <- >color * "ぷよ" * >num * "連結以上で消すべし" * !1:
-      req = DISAPPEAR_CONNECT_MORE.toRequirement(color = some $1, num = some $2)
-
-    requirement <-
-      reqClear |
-      reqDisappearColor |
-      reqDisappearColorMore |
-      reqDisappearNum |
-      reqDisappearNumMore |
-      reqChain |
-      reqChainMore |
-      reqChainClear |
-      reqChainMoreClear |
-      reqDisappearColorSametime |
-      reqDisappearColorMoreSametime |
-      reqDisappearNumSametime |
-      reqDisappearNumMoreSametime |
-      reqDisappearPlace |
-      reqDisappearPlaceMore |
-      reqDisappearConnect |
-      reqDisappearConnectMore
-
 func toRequirement*(str: string, url: bool): Option[Requirement] {.inline.} =
   ## Converts :code:`str` to the requirement.
   ## The string representation or URL is acceptable as :code:`str`,
@@ -223,6 +133,13 @@ func toRequirement*(str: string, url: bool): Option[Requirement] {.inline.} =
     UrlCharToNum = collect:
       for i, url in NumUrls:
         {url: RequirementNumber.low.succ i}
+
+    AllRequirementColors = collect:
+      for color in RequirementColor:
+        some color
+    AllRequirementNumbers = collect:
+      for num in RequirementNumber.low .. RequirementNumber.high:
+        some num
 
   if url:
     if str.len != 3:
@@ -244,9 +161,20 @@ func toRequirement*(str: string, url: bool): Option[Requirement] {.inline.} =
       req.num = some UrlCharToNum[str[2]]
 
     return some req
+  else:
+    # NOTE: this should be const, but Nim's bug (maybe in the specification) makes compilation extremely slow.
+    # TODO: make it const
+    let
+      allRequirements = collect:
+        for kind in RequirementKind:
+          for color in (if kind in RequirementKindsWithColor: AllRequirementColors else: @[none RequirementColor]):
+            for num in (if kind in RequirementKindsWithNum: AllRequirementNumbers else: @[none RequirementNumber]):
+              (kind: kind, color: color, num: num).Requirement
+      strToRequirement = collect:
+        for req in allRequirements:
+          {$req: some req}
 
-  {.noSideEffect.}:
-    discard Parser.match(str, result)
+    return strToRequirement.getOrDefault str
 
 # ------------------------------------------------
 # Nazo -> string
