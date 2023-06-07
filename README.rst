@@ -21,14 +21,6 @@ Please refer to the `documentation <https://izumiya-keisuke.github.io/nazopuyo-c
 
 This module uses `puyo-core <https://github.com/izumiya-keisuke/puyo-core>`_, so please refer to it as well.
 
-*******
-License
-*******
-
-Apache-2.0 or MPL-2.0
-
-See `NOTICE <NOTICE>`_ for details.
-
 **************
 For Developers
 **************
@@ -50,3 +42,16 @@ Writing Test
 #. Create a new directory directly under the :code:`tests` directory.
 #. Create a new file :code:`main.nim` in the directory.
 #. Write the entry point of the test as :code:`main()` procedure in the file.
+
+Contribution
+============
+
+Please work on the new branch and then submit a PR for the :code:`main` branch.
+
+*******
+License
+*******
+
+Apache-2.0 or MPL-2.0
+
+See `NOTICE <NOTICE>`_ for details.
