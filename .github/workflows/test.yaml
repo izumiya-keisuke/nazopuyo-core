@@ -1,6 +1,16 @@
 name: Run Test
 
-on: [push]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+on:
+  push:
+
+  workflow_dispatch:
 
 jobs:
   test:
@@ -24,7 +34,7 @@ jobs:
 
       - uses: jiro4989/setup-nim-action@v1
 
-      - run: nimble -y install npeg https://github.com/izumiya-keisuke/puyo-core
+      - run: nimble -y install https://github.com/izumiya-keisuke/puyo-core
 
       - run: nim c -r ./tests/makeTest.nim
         if: runner.os == 'Linux'
