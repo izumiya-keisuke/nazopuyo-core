@@ -6,3 +6,5 @@
 !/tests/makeTest.nim
 /tests/*/*
 !/tests/*/main.nim
+
+/src/htmldocs/
