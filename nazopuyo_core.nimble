@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.1"
+version       = "0.2.0"
 author        = "Keisuke Izumiya"
 description   = "Nazo Puyo Library"
 license       = "Apache-2.0 OR MPL-2.0"
@@ -11,9 +11,9 @@ installExt    = @["nim"]
 
 # Dependencies
 
-requires "nim >= 1.6.12"
+requires "nim >= 1.6.14"
 
-requires "https://github.com/izumiya-keisuke/puyo-core >= 0.2.1"
+requires "https://github.com/izumiya-keisuke/puyo-core >= 0.3.0"
 
 
 # Tasks
